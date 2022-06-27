@@ -3,34 +3,25 @@ import ReactECharts from "echarts-for-react";
 import dayjs from "dayjs";
 
 const BarLineChart = ({
-  data = { title: '', xAxis: [], yAxis: [], max: 100, min: 0 },
+  data = { title: '', xAxis: [], blueData: [], greenData: [], redData: [], max: 100, min: 0 },
 }) => {
-  console.log('data', data);
+  // console.log('data', data);
   const [dataZoom, setDataZoom] = useState(1001);
   const options = {
-    dataset: [
-      {
-        source: [
-          [1, 4862.4],
-          [2, 5294.7],
-          [3, 5934.5],
-          [4, 7171.0],
-          [5, 8964.4],
-          [6, 10202.2],
-          [7, 11962.5],
-          [8, 14928.3],
-          [9, 16909.2],
-          [10, 18547.9],
-          [11, 21617.8],
-          [12, 26638.1],
-          [13, 34634.4],
-          [14, 46759.4],
-          [15, 58478.1],
-          [16, 67884.6],
-          [17, 74462.6],
-          [18, 79395.7]
-        ]
+    title: {
+      left: 'center',
+      text: '散佈圖+風險線',
+      textStyle: {
+        color: '#fff',
       },
+    },
+    dataset: [
+      // {
+      //   source: data.blueData,
+      // },
+      // {
+      //   source: data.greenData,
+      // },
       // {
       //   transform: {
       //     // type: 'ecStat:regression',
@@ -56,34 +47,45 @@ const BarLineChart = ({
       right: "4%",
       containLabel: true,
     },
-    legend: {
-      data: ["成交量"],
-    },
-    // backgroundColor: "black",
+    // legend: {
+    //   data: ["成交量"],
+    // },
     xAxis: [
       {
         type: "category",
         boundaryGap: true,
-        // data: data.xAxis,
-        axisLabel: {
-          interval: 100,
-          align: 'center',
-          formatter: (value, index) => {
-            return Number(value).toFixed(1);
-          },
+        data: data.xAxis,
+        textStyle: {
+          color: '#fff',
         },
-        axisTick: {
-          show: true,
-          alignWithLabel: true,
-          interval: 100,
-          inside: true,
-        }
+        splitLine: {
+          show: false
+        },
+          // axisLabel: {
+        //   interval: 100,
+        //   align: 'center',
+        //   formatter: (value, index) => {
+        //     return Number(value).toFixed(1);
+        //   },
+        // },
+        // axisTick: {
+        //   show: true,
+        //   alignWithLabel: true,
+        //   interval: 100,
+        //   inside: true,
+        // }
       },
     ],
     yAxis: [
       {
         type: "value",
-        // name: (data.title) ? data.title : 'title',
+        textStyle: {
+          color: '#fff',
+        },
+        splitLine: {
+          show: false
+        },
+          // name: (data.title) ? data.title : 'title',
         // nameLocation: "middle",
         // nameGap: 10,
         
@@ -106,20 +108,45 @@ const BarLineChart = ({
     // ],
     series: [
       {
-        name: 'scatter',
+        name: 'daily_ret 2',
         type: 'scatter',
-        datasetIndex: 0
+        data: data.blueData,
+        datasetIndex: 0,
+        emphasis: {
+          focus: 'series'
+        },
+        itemStyle: {
+          color: "steelblue",
+        },
       },
       {
-        name: 'line',
+        name: 'daily_ret 1',
+        type: 'scatter',
+        data: data.greenData,
+        datasetIndex: 0,
+        emphasis: {
+          focus: 'series'
+        },
+        itemStyle: {
+          color: "seagreen",
+        },
+      },
+      {
+        name: '99% VaR',
         type: 'line',
-        smooth: true,
+        data: data.redData,
         datasetIndex: 1,
-        symbolSize: 0.1,
-        symbol: 'circle',
-        label: { show: true, fontSize: 16 },
-        labelLayout: { dx: -20 },
-        encode: { label: 2, tooltip: 1 }
+        emphasis: {
+          focus: 'series'
+        },
+        itemStyle: {
+          color: "red",
+        },
+        // symbolSize: 0.1,
+        // symbol: 'circle',
+        // label: { show: true, fontSize: 16 },
+        // labelLayout: { dx: -20 },
+        // encode: { label: 2, tooltip: 1 }
       },
 
       // {
@@ -158,7 +185,7 @@ const BarLineChart = ({
 
   return (
     <>
-      <ReactECharts className="border" option={options} />
+      <ReactECharts option={options} />
     </>
   );
 };

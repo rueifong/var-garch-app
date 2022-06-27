@@ -1,11 +1,23 @@
-import React, { useState, createRef } from "react";
+import React, { useState, createRef, useEffect } from "react";
 import BarLineChart from "../../pages/echart-example/bar-line";
+import GaugeChart from "../../pages/echart-example/gauge";
+import PriceChart from "../../pages/echart-example/price";
 import { Input, Button, Select, Table } from 'antd';
 import { useCSVReader } from "react-papaparse";
+import { api, defaultAxios } from "../../environment/api";
+
+
+var optimjs = require('optimization-js');
 // import CSVReader from "./read-file";
 // const { Option } = Select;
 
 // const buttonRef = createRef();
+// import "./math";
+// import { opt } from "scipy-optimize";
+// var opt = require('scipy-optimize').opt;
+// var cp = require('scipy-optimize');
+// var opt = cp.spawn('opt');
+
 
 const ReplayChart = () => {
   const { CSVReader } = useCSVReader();
@@ -15,9 +27,14 @@ const ReplayChart = () => {
     max: 150,
     min: 0,
   });
-  let [tableData, setTableData] = useState([]);
+  const [chartData, setChartData] = useState({
+    blueData: [],
+    greenData: [],
+  });
   let [CSVData, setCSVData] = useState([]);
-  const [dfs, setDfs] = useState([]);
+  let [dfs, setDfs] = useState([]);
+  let [dfsNew, setDfsNew] = useState([]);
+
   // Step 1: 取得原始資料及資料處理
   // 讀檔
   const readCSVFile = (results) => {
@@ -36,18 +53,39 @@ const ReplayChart = () => {
     console.log('CSVData', data);
 
     console.log('log_likelihood_MLE', log_likelihood_MLE([3, 3, 3]));
+    console.log('log_likelihood_MLE 2', log_likelihood_MLE([
+      2.9164583714446053, -1.497529563726857, 2.9999952560756356
+    ]));
+
+    
+    calcVariance(data);
+
+
+    var minimize = mle_model(log_likelihood_MLE, [3, 3, 3]);
+    console.log('minimize_Powell', minimize);
+
+    // var example = mle_model(objective, [3, 3, 3]);
+    // console.log('minimize_Powell for example', example);
+  }
+
+  const objective = (x) => {
+    return (x[0]-1.0)*(x[0]-1.0) + (x[1]+0.5)*(x[1]+0.5) + (x[2]+2.0)*(x[2]+2.0)
   }
 
   // Step 2: 模型參數估計
   // GARCH(1,1)
   // 用MLE算參數
   const log_likelihood_MLE = (params) => {
-    let [alpha, beta, gamma] = params;   // #alpha, beta, omega = params[0], params[1], params[2]
+    // let [alpha, beta, gamma] = params;
+    let alpha = params[0];   // #alpha, beta, omega = params[0], params[1], params[2]
+    let beta = params[1];   // #alpha, beta, omega = params[0], params[1], params[2]
+    let gamma = params[2];   // #alpha, beta, omega = params[0], params[1], params[2]
     let data = [];
     let window = 250;   // 估計參數所使用之樣本數
     let var_long =  0.0003;   // 假設的
+    let df = CSVData;
 
-    CSVData.forEach(function (obj, i) {
+    df.forEach(function (obj, i) {
       let daily_ret = obj.daily_ret;
       let variance = daily_ret;
       if (i === 0) {
@@ -58,9 +96,8 @@ const ReplayChart = () => {
         variance = gamma * var_long + beta * (data[i-1].variance) + alpha * Math.pow(data[i-1].daily_ret, 2);
       }
       let stdev = Math.sqrt(variance);
-      let loglikelihood = -Math.log(variance) - (Math.pow(daily_ret, 2)) / variance;   // loglikelihood
-      // #df['stdev'] = df['daily_ret'].rolling(window=2, center=False).std(ddof=0)
-
+      let loglikelihood = -Math.log(variance) - Math.pow(daily_ret, 2) / variance;   // loglikelihood
+      console.log(i, loglikelihood, variance, daily_ret);
       data.push({
         ...obj,
         variance: variance,
@@ -68,18 +105,21 @@ const ReplayChart = () => {
         loglikelihood: loglikelihood,
       });
     });
-    setDfs(data);
-    console.log('df', data);
+    // setCSVData(data);
+    // CSVData = data;
+    // console.log('df', CSVData);
     
     let sums = 0;
-    for(let i = 1; i <= window; i++) {
+    for (let i = 1; i < window; i++) {
       sums += data[i].loglikelihood;
     }
-
     return -sums;
   }
 
   // 規劃求解
+  const mle_model = (fuc, x0) => {
+    return minimize_Powell(fuc, x0);
+  }
   // bounds = Bounds([0.0, 0.0, 0.0], [1.00, 1.00, 1.00])         #  0 < alpha, beta, gamma < 1
   // let cons = {
   //   'type': 'eq',
@@ -87,18 +127,169 @@ const ReplayChart = () => {
   // };  
   // #cons = {'type': 'ineq', 'fun': lambda params: -params[0] - params[1] - params[2] + 1}   # alpta + beta  <  1 (另一種)
   // let mle_model = minimize(log_likelihood_MLE, np.array([3, 3, 3]), method='SLSQP', bounds = bounds, constraints = cons)
+
   // mle_model
   // #mle_model.x[0]      #alpha
   // #mle_model.x[1]      #beta
   // #mle_model.x[2]      #gamma
 
+  function shuffleIndiciesOf (array) {
+    var idx = [];
+    for (var i = 0; i < array.length; i++) {
+        idx.push(i);
+    }
+    for (var i = 0; i < array.length; i++) {
+        var j = Math.floor(Math.random() * i);
+        var tmp = idx[i];
+        idx[i] = idx[j];
+        idx[j] = tmp;
+    }
+    return idx;
+  };
+
+  const minimize_Powell = (fnc, x0) => {
+    console.log("==================start==================")
+    var eps = 1e-2;
+    var convergence = false;
+    var x = x0.slice(); // make copy of initialization
+    var alpha = 0.001; // scaling factor
+    var pfx = Math.exp(10);
+    var fx = fnc(x);
+    var pidx = 1;
+    console.log('fx', fx, x);    
+    while (!convergence) {
+        var indicies = shuffleIndiciesOf(x);
+        console.log('indicies', indicies);
+        convergence = true;
+        // Perform update over all of the variables in random order
+        for (var i = 0; i < indicies.length; i++) {
+            x[indicies[i]] += 1e-6;
+            console.log('fxi-start', x);
+            var fxi = fnc(x);
+            console.log('fxi-end', fxi, x);
+            x[indicies[i]] -= 1e-6;
+            var dx = (fxi - fx) / 1e-6;
+            if (Math.abs(dx) > eps) {
+                convergence = false;
+            }
+            x[indicies[i]] = x[indicies[i]] - alpha * dx;
+            console.log('fx 2-start', x);
+            fx = fnc(x);
+            console.log('fx 2', fx, x);
+        }
+        // a simple step size selection rule. Near x function acts linear 
+        // (this is assumed at least) and thus very small values of alpha
+        // should lead to (small) improvement. Increasing alpha would
+        // yield better improvement up to certain alpha size.
+        
+        alpha = pfx > fx ? alpha * 1.1 : alpha * 0.7;
+        pfx = fx;
+        pidx--;
+        if (pidx === 0) {
+            pidx = 1;
+        }
+    }
+    var solution = {};
+    solution.argument = x;
+    solution.fncvalue = fx;
+    console.log("==================end==================")
+    return solution;
+  }
+  ////////////////////////////////////////////////////////////////
+
   // Step 3: 計算變異數及風險值
 
+  const calcVariance = (csvData) => {
+    console.log('calcVariance');
+    let data = [];
+    let window = 250      // #實際回測使樣本數 ( = 總樣本數 - 估計參數使用之樣本數)
+    let var_long =  0.0003
+
+    csvData.forEach((obj, i) => {
+      data.push({
+        ...obj,
+        stdev: obj.daily_ret,
+      })
+    })
+    data[window-1].stdev = 0;
+    data[window].stdev = Math.abs(data[window - 1].daily_ret);
+
+    console.log('df', data);
+
+    
+    for (let i = window; i < csvData.length; i++) {
+      // #####   計算變異數
+      // data[i].variance = mle_model.x[2] * var_long + mle_model.x[1] * (data[i-1].variance) + mle_model.x[0]  * Math.pow(data[i-1].daily_ret, 2)
+      data[i].variance = Math.random();
+      data[i].stdev = Math.sqrt(data[i].variance);
+      // #####   計算風險值
+      data[i]['99% VaR'] = -2.33 * data[i].stdev;  // #Normal Distribution (99% VaR)
+      // #df['99% VaR']= -3.365 * df['stdev']    // #Student-t Distribution df=5 (99% VaR)
+      
+      // #df['95% VaR']= -1.645 *df['stdev']  // #Normal Distribution (95% VaR)
+      // #df['95% VaR']= -2.015 * df['stdev']    // #Student-t Distribution df=5 (95% VaR)
+      
+      data[i].difference = data[i].daily_ret - data[i]['99% VaR'];
+      // #df['difference']=df['daily_ret'] - df['95% VaR']
+    }
+              
+    for (let i = 0; i < csvData.length; i++) {
+      data[i].stdev = Math.sqrt(data[i].variance);
+      data[i].stdev_year = data[i].stdev * Math.sqrt(252);  // #  年化標準差
+      // #dfs[:200]
+    }
+
+    let newData = [];
+    for (let i = window; i < csvData.length; i++) {
+      newData.push(data[i]);
+    }
+    setDfsNew(newData);
+    dfsNew = newData;
+    exceedance();
+    return newData;
+  }
+
   // exceedance (穿透次數)
+  const exceedance = () => {
+    let count = 0;
+    let g = 0;
+    for (let i = 0; i < dfsNew.length; i++) {
+      g += 1;
+      if (dfsNew[i].difference < 0) {
+        count += 1;
+      }
+      console.log("樣本數 =", g, "  " ,"穿透次數 =", count)
+    }
+    runPlot();
+  }
 
   // 繪圖
   const runPlot = () => {
+    let xAxis = [];
+    let blueData = [];
+    let greenData = [];
+    let redData = [];
+    for (let i = 0; i < dfsNew.length; i++) {
+      xAxis.push(dfsNew[i].date);
+      if (dfsNew[i].difference < 0) {
+        blueData.push([dfsNew[i].date, dfsNew[i].daily_ret]);
+      } else {
+        greenData.push([dfsNew[i].date, dfsNew[i].daily_ret]);
+      }
+      redData.push([dfsNew[i].date, dfsNew[i]['99% VaR']]);
+    }
+    console.log('blueData', blueData);
+    console.log('greenData', greenData);
+    setChartData({
+      xAxis: xAxis,
+      blueData: blueData,
+      greenData: greenData,
+      redData: redData,
+    })
 
+    // plt.plot(df_new['date'], df_new['99% VaR'], c= "red")
+
+    // plt.show()
   }
 
   // Unconditional Coverage Test
@@ -167,6 +358,53 @@ const ReplayChart = () => {
 
   }
 
+  
+  const fetchData = () => {
+    let apiType = 'chart';
+    let symbolId = '2330';
+    let apiToken = '4af7c90c0eac7cd5ee3d289f00045bbb';
+    let jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyMDQ1IiwiaWF0IjoxNjQ4MDIzNTE4LCJpc3MiOiJFMDhPb3VKeElXYnJlOW0yWXh6R2d4ZGhZWWJXU1cyMiJ9.0O7ZQSn6YaLJmiXLxdp1SARybxHKs18sqbdXcH3dQ-o';
+
+    defaultAxios({
+      url: api.realtime.url + `/${apiType}?symbolId=${symbolId}&apiToken=${apiToken}&limit=500&oddLot=true&jwt=${jwt}`,
+      method: api.realtime.method,
+    })
+      .then((res) => {
+        console.log(res.data.data);
+
+        let data = [];
+        res.data.data.chart.c.forEach(function (obj, index) {
+          if (index > 0) {
+            data.push({
+              date: res.data.data.chart.t[index],
+              daily_ret: obj,
+            });
+          }
+        });
+        setCSVData(data);
+        CSVData = data;
+        console.log('CSVData', data);
+
+        // console.log('log_likelihood_MLE', log_likelihood_MLE([3, 3, 3]));
+        // console.log('log_likelihood_MLE 2', log_likelihood_MLE([
+        //   2.9164583714446053, -1.497529563726857, 2.9999952560756356
+        // ]));
+    
+        
+        calcVariance(data);
+        
+      })
+      .catch((err) => {
+        console.log('資料有誤');
+        console.log(err);
+      })
+    }
+
+    useEffect(() => {
+      // fetchData();
+    }, [])
+
+    
   const handleOpenDialog = (e) => {
     // Note that the ref is set async, so it might be null at some point
     if (buttonRef.current) {
@@ -221,7 +459,7 @@ const ReplayChart = () => {
       width: "35%",
       paddingLeft: 0,
       paddingRight: 0,
-      backgroundColor: 'lightblue',
+      backgroundColor: 'steelblue',
     },
     acceptedFile: {
       border: '1px solid #ccc',
@@ -233,7 +471,7 @@ const ReplayChart = () => {
     remove: {
       borderRadius: 0,
       padding: '0 20px',
-      backgroundColor: 'lightpink',
+      backgroundColor: 'indianred',
       width: '15%',
     },
     progressBarBackgroundColor: {
@@ -243,13 +481,15 @@ const ReplayChart = () => {
   
   return (
     <>
-      <div style={{ backgroundColor: '#628ea5', padding: '0.5rem' }}>
+      <div className="bg-gray-900" style={{ padding: '0.5rem' }}>
         <h1 className="text-center mb-0" style={{ fontFamily: 'Microsoft Yahei', fontWeight: 500, fontSize: '1.5rem', color: '#fff' }}>
-        風險APP
+        風險監控平台
         </h1>
         <p className="text-center mb-0" style={{ fontFamily: 'Microsoft Yahei', fontSize: '2.4vmin', color: '#fff' }}>TaiwanTech Derivatives Lab</p>
       </div>
-      <div className="my-3">
+
+      {/* 讀檔 */}
+      <div className="bg-gray-800 text-white py-3">
         <CSVReader
           onUploadAccepted={(results) => {
             console.log('---------------------------');
@@ -279,170 +519,41 @@ const ReplayChart = () => {
             </>
           )}
         </CSVReader>
-    
       </div>
-      <div className="flex">
-        {/* 設定 */}
-        {/* <div className="w-1/5">
-          <div className="border p-5">
-            <h6>Stock Properties</h6>
-            <div className="flex items-center mb-2">
-              <span className="w-2/3">Interest rate (%)</span>
-              <Input disabled={isSet} type="number" className="w-30" value={interestRate} onChange={InterestRateValueChanged} />
-            </div>
-            <div className="flex items-center mb-2">
-              <span className="w-2/3">Volatility (%)</span>
-              <Input disabled={isSet} type="number" className="w-30" value={volatility} onChange={VolatilityValueChanged} />
-            </div>
-            <Button disabled={isSet} onClick={() => generateGBM()} className="w-full">Set</Button>
-          </div>
-
-          <div className="flex p-5">
-            <Button disabled={!isSet} onClick={() => ResetButtonPushed()} className="w-1/2" type="danger">Reset</Button>
-            <Button disabled={!isSet || currentStatus == 3} onClick={() => StartButtonPushed()} className="w-1/2" type="primary">{buttonText}</Button>
-          </div>
-
-          <div className="border p-5">
-            <h6>Place Order</h6>
-            <Radio.Group disabled={!isStockPanel} className="mb-2" onChange={LongShortSelectionChanged} value={longShort}>
-              <Radio value={1}>Long</Radio>
-              <Radio value={-1}>Short</Radio>
-            </Radio.Group>
-            <Button disabled={!isStockPanel} type={type == 1 ? 'primary' : 'default'} onClick={() => TypeSelectionChanged(1)} className="w-full mb-2">Stock</Button>
-            <Button disabled={!isStockPanel} type={type == 2 ? 'primary' : 'default'} onClick={() => TypeSelectionChanged(2)} className="w-full mb-2">Futures</Button>
-            <div className="flex mb-2">
-              <Button disabled={!isStockPanel} type={type == 3 ? 'primary' : 'default'} onClick={() => TypeSelectionChanged(3)} className="w-1/2">Vanilla Call</Button>
-              <Button disabled={!isStockPanel} type={type == 4 ? 'primary' : 'default'} onClick={() => TypeSelectionChanged(4)} className="w-1/2">Vanilla Put</Button>
-            </div>
-            <div className="flex mb-2">
-              <Button disabled={!isStockPanel} type={type == 5 ? 'primary' : 'default'} onClick={() => TypeSelectionChanged(5)} className="w-1/2">Binary Call</Button>
-              <Button disabled={!isStockPanel} type={type == 6 ? 'primary' : 'default'} onClick={() => TypeSelectionChanged(6)} className="w-1/2">Binary Put</Button>
-            </div>
-            <div className="flex items-center">
-              <span className="w-1/3">Volume</span>
-              <Input disabled={!isStockPanel} type="number" className="w-2/3" value={volume} onChange={VolumeValueChanged} />
-            </div>
-            <div className="flex items-center" style={{ opacity: (type == 1) ? 0 : 1 }}>
-              <span className="w-1/3">Strike</span>
-              <Input disabled={type == 1 || type == 2 || !isStockPanel} type="number" className="w-2/3" value={strike} onChange={StrikeValueChanged} />
-            </div>
-            <div className="flex items-center" style={{ opacity: (type == 1) ? 0 : 1 }}>
-              <span className="w-1/3">Maturity</span>
-              <Select disabled={type == 1 || !isStockPanel} className="w-2/3" defaultValue="1" onChange={MaturityValueChanged}>
-                <Option disabled={t[it] >= 0.2} value="0.2">0.2</Option>
-                <Option disabled={t[it] >= 0.4} value="0.4">0.4</Option>
-                <Option disabled={t[it] >= 0.6} value="0.6">0.6</Option>
-                <Option disabled={t[it] >= 0.8} value="0.8">0.8</Option>
-                <Option value="1">1</Option>
-              </Select>
-            </div>
-            <div className="flex items-center">
-              <span className="w-1/3">Cash Flow</span>
-              <Input disabled={true} type="number" className="w-2/3" value={cashFlow} />
-            </div>
-            <Button disabled={!isStockPanel} className="w-full mt-3" type="primary" onClick={() => PlaceOrderPushed()}>Place Order</Button>
-          </div>
-        </div> */}
-
-        {/* 圖表 */}
-        <div className="w-full">
-          <BarLineChart
-            data={StockPriceChart}
+      {/* 圖表 */}
+      <div className="flex bg-gray-800 w-full py-10">
+        <div className="w-1/6">
+          <GaugeChart
+            data={{
+              title: '99%的風險值',
+            }}
           />
-          {/* <BarLineChart
-            data={ProfitChart}
-          /> */}
-
-          <div className="flex">
-            <div className="w-3/4">
-              <Table
-                className="border"
-                rowKey="id"
-                size="small"
-                columns={[
-                  {
-                    title: "ID",
-                    dataIndex: "id",
-                    key: Math.random(),
-                    width: 50,
-                  },
-                  {
-                    title: "Time",
-                    dataIndex: "time",
-                    key: Math.random(),
-                    width: 50,
-                  },
-                  {
-                    title: "Type",
-                    dataIndex: "type",
-                    key: Math.random(),
-                    width: 50,
-                  },
-                  {
-                    title: "T",
-                    dataIndex: "t",
-                    key: Math.random(),
-                    width: 50,
-                  },
-                  {
-                    title: "K",
-                    dataIndex: "k",
-                    key: Math.random(),
-                    width: 50,
-                  },              {
-                    title: "Vol.",
-                    dataIndex: "vol",
-                    key: Math.random(),
-                    width: 50,
-                  },
-                  {
-                    title: "Cost",
-                    dataIndex: "cost",
-                    key: Math.random(),
-                    width: 50,
-                  },
-                  {
-                    title: "MarketValue",
-                    dataIndex: "marketValue",
-                    key: Math.random(),
-                    width: 80,
-                  },
-                  {
-                    title: "Profit",
-                    dataIndex: "profit",
-                    key: Math.random(),
-                    width: 50,
-                  },
-                  {
-                    title: "Expire",
-                    dataIndex: "expire",
-                    key: Math.random(),
-                    width: 50,
-                  },
-                ]}
-                pagination={false}
-                dataSource={
-                  tableData
-                  // orders.length && [{ ...orders[currentIndex], key: Math.random() }]
-                }
-                sticky
-              />
-            </div>
-            <div className="w-1/4 p-5 border py-8">
-              <div className="flex items-center mb-2">
-                <span className="w-1/3">Cash</span>
-                <Input disabled={true} type="number" className="w-2/3" value="" />
-              </div>
-              <div className="flex items-center mb-2">
-                <span className="w-1/3">Profit</span>
-                <Input disabled={true} type="number" className="w-2/3" value="" />
-              </div>
-              <div className="flex items-center">
-                <span className="w-1/3">Time</span>
-                <Input disabled={true} type="number" className="w-2/3" value="" />
-              </div>
-            </div>
-          </div>
+        </div>
+        <div className="w-1/6">
+          <GaugeChart
+            data={{
+              title: '95%的風險值',
+            }}
+          />
+        </div>
+        <div className="w-1/6">
+          <GaugeChart
+            data={{
+              title: '90%的風險值',
+            }}
+          />
+        </div>
+        <div className="w-4/6">
+          <BarLineChart
+            data={chartData}
+          />
+        </div>
+      </div>
+      <div className="flex bg-gray-800 w-full py-10">
+        <div className="w-full">
+          <PriceChart
+            data={chartData}
+          />
         </div>
       </div>
     </>

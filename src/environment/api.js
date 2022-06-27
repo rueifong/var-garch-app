@@ -4,10 +4,10 @@ import axios from "axios";
 function apiUrl() {
   switch (process.env.NODE_ENV === "development") {
     case "production":
-      return "http://140.118.118.173:20023/";
+      return "https://api.fintechspace.com.tw/";
     default:
     case "development":
-      return "http://140.118.118.173:20023/";
+      return "https://api.fintechspace.com.tw/";
   }
 }
 
@@ -16,19 +16,22 @@ export const defaultAxios = axios.create({
   // baseURL: "http://localhost:8080/",
   // baseURL: "http://192.168.1.3:8080/",
 });
-export function settingToken(token) {
-  defaultAxios.defaults.headers.common["token"] = token;
-}
+// export function settingToken(token) {
+//   defaultAxios.defaults.headers.common["token"] = token;
+// }
 
-defaultAxios.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (!config.headers.token) config.headers.token = token;
-  return config;
-});
+// defaultAxios.interceptors.request.use((config) => {
+//   const token = localStorage.getItem("token");
+//   if (!config.headers.token) config.headers.token = token;
+//   return config;
+// });
 
 // api
 
 export const api = {
+  realtime: { url: "realtime/v0.3/intraday", method: "GET" },
+
+
   login: { url: "api/investor/login", method: "POST" },
   logout: { url: "api/investor/logout", method: "POST" },
 

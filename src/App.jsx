@@ -9,7 +9,7 @@ import RouterLink from "./component/router-link";
 import { AUTH_MAPPING_DATA } from "./authData";
 
 import { useEffect, useState } from "react";
-import { settingToken, api, defaultAxios } from "./environment/api";
+// import { settingToken, api, defaultAxios } from "./environment/api";
 const events = require("events");
 
 export const appEventEmitter = new events.EventEmitter();
@@ -45,8 +45,8 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    setAuth(!!token);
-    settingToken(token);
+    // setAuth(!!token);
+    // settingToken(token);
   }, [token]);
 
   // useEffect(() => {
@@ -66,7 +66,7 @@ const App = () => {
     <BrowserRouter>
       <div className="flex ">
         {/* {<RouterLink setToken={setToken} permission={['Q1-chart', 'replay-chart']} />} */}
-        <div className="flex-1 mb-10">
+        <div className="flex-1">
           <Switch>
             {/* <Route
               path="/login/"
