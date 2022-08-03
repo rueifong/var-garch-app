@@ -3,7 +3,7 @@ import ReactECharts from "echarts-for-react";
 import dayjs from "dayjs";
 
 const GaugeChart = ({
-  data = { title: '', xAxis: [], blueData: [], greenData: [], redData: [], max: 100, min: 0 },
+  data = { title: '', value: 0 },
 }) => {
   // console.log('data', data);
   const [dataZoom, setDataZoom] = useState(1001);
@@ -43,14 +43,14 @@ const GaugeChart = ({
           }
         },
         axisTick: {
-          length: 12,
+          length: 1,
           lineStyle: {
             color: 'auto',
             width: 2
           }
         },
         splitLine: {
-          length: 20,
+          length: 10,
           lineStyle: {
             color: 'auto',
             width: 5
@@ -73,10 +73,10 @@ const GaugeChart = ({
         },
         title: {
           offsetCenter: [0, '-20%'],
-          fontSize: 30
+          fontSize: 20
         },
         detail: {
-          fontSize: 40,
+          fontSize: 35,
           offsetCenter: [0, '0%'],
           valueAnimation: true,
           formatter: function (value) {
@@ -86,7 +86,7 @@ const GaugeChart = ({
         },
         data: [
           {
-            value: 0.7,
+            value: data.value,
           }
         ]
       }

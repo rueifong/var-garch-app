@@ -5,6 +5,9 @@ import PriceChart from "../../pages/echart-example/price";
 import { Input, Button, Select, Table } from 'antd';
 import { useCSVReader } from "react-papaparse";
 import { api, defaultAxios } from "../../environment/api";
+import bgImg from "../../imgs/istockphoto-1269592684-612x612.jpg";
+import bgImg2 from "../../imgs/istockphoto-1130281605-612x612.jpg"
+import bgImg3 from "../../imgs/istockphoto-1170113435-612x612.jpg";
 
 
 var optimjs = require('optimization-js');
@@ -480,83 +483,99 @@ const ReplayChart = () => {
   };
   
   return (
-    <>
-      <div className="bg-gray-900" style={{ padding: '0.5rem' }}>
-        <h1 className="text-center mb-0" style={{ fontFamily: 'Microsoft Yahei', fontWeight: 500, fontSize: '1.5rem', color: '#fff' }}>
-        風險監控平台
-        </h1>
-        <p className="text-center mb-0" style={{ fontFamily: 'Microsoft Yahei', fontSize: '2.4vmin', color: '#fff' }}>TaiwanTech Derivatives Lab</p>
-      </div>
+    <div className="relative">
+      <div className="absolute" style={{ zIndex: 10, height: '100vh', width: '100%', background: 'url('+bgImg+')', backgroundSize: '100% 100%', filter: 'brightness(0.5)' }} ></div>
+      <div className="absolute w-full" style={{ zIndex: 11 }}>
+        <div className="" style={{ padding: '0.5rem' }}>
+          <h1 className="text-center mb-0" style={{ fontFamily: 'Microsoft Yahei', fontWeight: 500, fontSize: '1.5rem', color: '#fff' }}>
+          風險監控平台
+          </h1>
+          <p className="text-center mb-0" style={{ fontFamily: 'Microsoft Yahei', fontSize: '2.4vmin', color: '#fff' }}>TaiwanTech Derivatives Lab</p>
+        </div>
 
-      {/* 讀檔 */}
-      <div className="bg-gray-800 text-white py-3">
-        <CSVReader
-          onUploadAccepted={(results) => {
-            console.log('---------------------------');
-            readCSVFile(results.data);
-            console.log('---------------------------');
-          }}
-        >
-          {({
-            getRootProps,
-            acceptedFile,
-            ProgressBar,
-            getRemoveFileProps,
-          }) => (
-            <>
-              <div style={styles.csvReader}>
-                <button type='button' {...getRootProps()} style={styles.browseFile}>
-                  Browse file
-                </button>
-                <div style={styles.acceptedFile}>
-                  {acceptedFile && acceptedFile.name}
+        {/* 讀檔 */}
+        <div className="text-white py-0">
+          <CSVReader
+            onUploadAccepted={(results) => {
+              console.log('---------------------------');
+              readCSVFile(results.data);
+              console.log('---------------------------');
+            }}
+          >
+            {({
+              getRootProps,
+              acceptedFile,
+              ProgressBar,
+              getRemoveFileProps,
+            }) => (
+              <>
+                <div style={styles.csvReader}>
+                  <button type='button' {...getRootProps()} style={styles.browseFile}>
+                    Browse file
+                  </button>
+                  <div style={styles.acceptedFile}>
+                    {acceptedFile && acceptedFile.name}
+                  </div>
+                  <button {...getRemoveFileProps()} style={styles.remove}>
+                    Remove
+                  </button>
                 </div>
-                <button {...getRemoveFileProps()} style={styles.remove}>
-                  Remove
-                </button>
-              </div>
-              <ProgressBar style={styles.progressBarBackgroundColor} />
-            </>
-          )}
-        </CSVReader>
+                <ProgressBar style={styles.progressBarBackgroundColor} />
+              </>
+            )}
+          </CSVReader>
+        </div>
+        {/* 圖表 */}
+        <div className="flex w-full px-10">
+          <div className="w-1/6 ml-5">
+            <GaugeChart
+              data={{
+                title: '99%的風險值',
+                value: 0.7,
+              }}
+            />
+          </div>
+          <div className="w-1/6">
+            <GaugeChart
+              data={{
+                title: '95%的風險值',
+                value: 0.2,
+              }}
+            />
+          </div>
+          <div className="w-1/6">
+            <GaugeChart
+              data={{
+                title: '90%的風險值',
+                value: 0.55,
+              }}
+            />
+          </div>
+          <div className="w-4/6" style={{ marginTop: '-30px' }}>
+            <PriceChart
+              data={chartData}
+            />
+          </div>
+        </div>
+        <div className="flex w-full px-10" style={{ marginTop: '-60px' }}>
+          <div className="w-5/6">
+            <BarLineChart
+              data={chartData}
+            />
+          </div>
+          <div className="w-1/6 text-white">
+            <h2 className="text-white">統計數據：</h2>
+            描述性統計量<br />
+            報酬平均數<br />
+            標準差<br />
+            變異數<br />
+            峰態<br />
+            偏態<br />
+            風險值
+          </div>
+        </div>
       </div>
-      {/* 圖表 */}
-      <div className="flex bg-gray-800 w-full py-10">
-        <div className="w-1/6">
-          <GaugeChart
-            data={{
-              title: '99%的風險值',
-            }}
-          />
-        </div>
-        <div className="w-1/6">
-          <GaugeChart
-            data={{
-              title: '95%的風險值',
-            }}
-          />
-        </div>
-        <div className="w-1/6">
-          <GaugeChart
-            data={{
-              title: '90%的風險值',
-            }}
-          />
-        </div>
-        <div className="w-4/6">
-          <BarLineChart
-            data={chartData}
-          />
-        </div>
-      </div>
-      <div className="flex bg-gray-800 w-full py-10">
-        <div className="w-full">
-          <PriceChart
-            data={chartData}
-          />
-        </div>
-      </div>
-    </>
+    </div>
   );
 };
 

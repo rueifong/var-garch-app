@@ -14,6 +14,7 @@ const BarLineChart = ({
       textStyle: {
         color: '#fff',
       },
+      top: 30,
     },
     dataset: [
       // {
@@ -116,7 +117,7 @@ const BarLineChart = ({
           focus: 'series'
         },
         itemStyle: {
-          color: "steelblue",
+          color: "skyblue",
         },
       },
       {
@@ -128,7 +129,7 @@ const BarLineChart = ({
           focus: 'series'
         },
         itemStyle: {
-          color: "seagreen",
+          color: "#5ccd95",
         },
       },
       {

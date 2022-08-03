@@ -22,6 +22,7 @@ const PriceChart = ({
       textStyle: {
         color: '#fff',
       },
+      top: 30,
     },
     // legend: {
     //   top: 'bottom',
