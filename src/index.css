@@ -19,3 +19,111 @@ code {
 .active{
   color: red;
 }
+
+.ant-select-selector {
+  background-color: #111144 !important;
+  color: #fff !important;
+}
+
+.ant-checkbox-wrapper {
+  color: #fff !important;
+}
+
+/* 背景圖 使用margin auto實現垂直水平居中 */
+.traffic-light-wrap {
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  width: 100px;
+  height: 60px;
+  /* background: rgb(97, 170, 189); */
+}
+/* 燈框架 */
+.traffic-light {
+  /* 居中代碼 */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  text-align: center;
+  /* 繪製圖案 */
+  width: 100px;
+  height: 50px;
+  background: #282f2f;
+  border-radius: 50px;
+  box-shadow: 0 0 0 2px #eee inset;
+}
+.traffic-light::after {
+  /* 居中代碼 */
+  position: absolute;
+  top: 50%;
+  left: 70%;
+  transform: translate(-50%, -50%);
+  content: '';
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  /* animation: traffic-light 5s linear 0s infinite; */
+}
+.traffic-light.red::after {
+  background: transparent;  /* 黃燈 */
+  box-shadow: 
+  -38px 0 0 0 rgb(247, 78, 26),  /* 紅燈 */
+  38px 0 0 0 transparent, /* 綠燈 */
+  -38px 0 15px 0 rgb(247, 78, 26), /* 紅燈光影 */
+  0px 0 15px 0 transparent, /* 黃燈光影 */
+  38px 0 15px 0 transparent; /* 綠燈光影 */
+}
+.traffic-light.green::after {
+  background: rgb(38, 175, 84);  /* 黃燈 */
+  box-shadow: 
+  -38px 0 0 0 transparent,  /* 紅燈 */
+  38px 0 0 0 transparent, /* 綠燈 */
+  -38px 0 15px 0 transparent, /* 紅燈光影 */
+  0px 0 15px 0 rgb(38, 175, 84), /* 黃燈光影 */
+  38px 0 15px 0 transparent; /* 綠燈光影 */
+}
+@keyframes traffic-light {
+  from {
+    background: transparent;  /* 黃燈 */
+    box-shadow: 
+    -38px 0 0 0 transparent,  /* 紅燈 */
+    38px 0 0 0 transparent, /* 綠燈 */
+    -38px 0 15px 0 transparent, /* 紅燈光影 */
+    0px 0 15px 0 transparent, /* 黃燈光影 */
+    38px 0 15px 0 transparent; /* 綠燈光影 */
+  }
+  30% {
+    background: transparent;  /* 黃燈 */
+    box-shadow: 
+    -38px 0 0 0 rgb(247, 78, 26),  /* 紅燈 */
+    38px 0 0 0 transparent, /* 綠燈 */
+    -38px 0 15px 0 rgb(247, 78, 26), /* 紅燈光影 */
+    0px 0 15px 0 transparent, /* 黃燈光影 */
+    38px 0 15px 0 transparent; /* 綠燈光影 */
+  }
+  60% {
+    background: transparent;  /* 黃燈 */
+    box-shadow: 
+    -38px 0 0 0 transparent,  /* 紅燈 */
+    38px 0 0 0 rgb(38, 175, 84), /* 綠燈 */
+    -38px 0 15px 0 transparent, /* 紅燈光影 */
+    0px 0 15px 0 transparent, /* 黃燈光影 */
+    38px 0 15px 0 rgb(38, 175, 84); /* 綠燈光影 */
+  }
+  to {
+    background: transparent;  /* 黃燈 */
+    box-shadow: 
+    -38px 0 0 0 transparent,  /* 紅燈 */
+    38px 0 0 0 transparent, /* 綠燈 */
+    -38px 0 15px 0 transparent, /* 紅燈光影 */
+    0px 0 15px 0 transparent, /* 黃燈光影 */
+    38px 0 15px 0 transparent; /* 綠燈光影 */
+  }
+}

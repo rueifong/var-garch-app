@@ -1,43 +1,60 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useState } from "react";
 import ReactECharts from "echarts-for-react";
-import { Select } from "antd";
 import dayjs from "dayjs";
-// import echarts from 'echarts/lib/echarts';
 
-const LineChart = ({
-  // originData = {},
-  originData = { xAxis: [], yAxis: [] },
-  // onDateFormatChange,
-}) => {
-  const [data, setData] = useState({});
-  // console.log('originData1', originData);
-  const chartRef = useRef(null);
-  let chartInstance = null;
-
-  function renderChart() {
-    const renderedInstance = ReactECharts.getInstanceByDom(chartRef.current)
-    if (renderedInstance) {
-      chartInstance = renderedInstance
-    } else {
-      chartInstance = ReactECharts.init(chartRef.current)
-    }
-    chartInstance.setOption(options)
+function func(x) {
+  x /= 10;
+  return Math.sin(x * 2 +  5) * Math.cos(x) * Math.sin(x) * 50;
+}
+function generateData() {
+  let data = [];
+  for (let i = -10; i <= 10; i += 0.1) {
+    data.push([i, func(i)]);
   }
+  return data;
+}
 
-  useEffect(() => {
-    // console.log('originData2', originData);
-    setData(originData);
-    // renderChart();
-    // if (data?.series?.length) {
-    //   let max = 10;
-    //   data.series.forEach((deta) => {
-    //     if (Math.abs(deta) > max) max = Math.abs(deta) + 10;
-    //   });
-    //   setYAxisMax(max);
-    // }
-  });
-
+const BarLineChart = ({
+  data = { title: '', xAxis: [], yAxis: [] },
+}) => {
+  // console.log('data', data);
+  console.log('data.xAxis[0]', data.xAxis[0]);
+  console.log('data.xAxis[max]', data.xAxis[data.xAxis.length - 1]);
+  const [dataZoom, setDataZoom] = useState(1001);
   const options = {
+    title: {
+      left: 'center',
+      text: '常態分佈圖',
+      textStyle: {
+        color: '#fff',
+        fontSize: '14px',
+      },
+      top: 25,
+    },
+    grid: {
+      height: 120,
+      left: '5%',
+      right: '5%',
+      containLabel: true,
+    },
+    dataset: [
+      // {
+      //   source: data.blueData,
+      // },
+      // {
+      //   source: data.greenData,
+      // },
+      // {
+      //   transform: {
+      //     // type: 'ecStat:regression',
+      //     config: {
+      //       method: 'exponential'
+      //       // 'end' by default
+      //       // formulaOn: 'start'
+      //     }
+      //   }
+      // }
+    ],
     tooltip: {
       trigger: "axis",
       axisPointer: {
@@ -47,74 +64,111 @@ const LineChart = ({
         },
       },
     },
-    grid: {
-      left: "3%",
-      right: "4%",
-      containLabel: true,
-    },
-    legend: {
-      data: ["成交量"],
-    },
-    // backgroundColor: "black",
     xAxis: [
       {
         type: "category",
-        boundaryGap: true,
-        // data: [1, 2, 3, 4],
+        boundaryGap: false,
         data: data.xAxis,
-        axisLabel: {
-          formatter: (value, index) => {
-            return Number(value).toFixed(2);
-            // const day = dayjs(value).format("HH:mm:ss");
-            // return day;
-          },
+        splitLine: {
+          show: false
         },
+        axisLine: {
+          onZero: false,
+        },
+        // max: data.xAxis[data.xAxis.length - 1],
+        // axisTick: {
+        //   alignWithLabel: true
+        // },
+        // axisPointer: {
+        //   type: 'shadow'
+        // }
       },
     ],
     yAxis: [
       {
         type: "value",
-        scale: true,
-        name: "成交價",
-      },
+        name: 'y',
+        boundaryGap: false,
+        splitLine: {
+          show: false
+        },
+        axisLine: {
+          onZero: false,
+        },
+      }
     ],
     // dataZoom: [
     //   {
     //     show: true,
-    //     realtime: true,
-    //     startValue: dataZoom ? data.xAxis.length - dataZoom : 0,
-    //     endValue: data.xAxis.length - 1,
-    //     onChange: (val) => {
-    //       console.log(val);
-    //     },
+    //     type: 'inside',
+    //     filterMode: 'none',
+    //     xAxisIndex: [0],
+    //     startValue: data.xAxis[0],
+    //     endValue: data.xAxis[10000],
     //   },
     // ],
     series: [
       {
-        name: "成交價2",
-        type: "line",
-        // step: "end",
-        // data: [10, 12, 8, 15],
+        type: 'line',
+        showSymbol: true,
+        smooth: true,
         data: data.yAxis,
-        // itemStyle: {
-        //   color: "black",
-        // },
+        markLine: {
+          symbol: 'none',
+          itemStyle: {
+            normal: { lineStyle: { type: 'dotted', color:'#fff' } }
+          },
+          data: [
+            [
+              {
+                  name: '99%',
+                  coord: [-0.0028175683283942848, 0]
+              },
+              {
+                  coord: [-0.0028175683283942848, 350]
+              }
+            ],
+            [
+              {
+                  name: '95%',
+                  coord: [50, 0]
+              },
+              {
+                  coord: [50, 350]
+              }
+            ],
+            [
+              {
+                  name: '90%',
+                  coord: [100, 0]
+              },
+              {
+                  coord: [100, 350]
+              }
+            ],
+            // {
+            //   name: '99%',
+            //   xAxis: 10,
+            // },
+            // {
+            //   name: '95%',
+            //   xAxis: 50,
+            // },
+            // {
+            //   name: '90%',
+            //   xAxis: 100,
+            // },
+          ]
+        }
       },
     ],
   };
 
   return (
     <>
-      {useMemo(() => {
-        return <>
-          <ReactECharts 
-            option={options}
-            // key={(originData.xAxis.length === 0) ? 0: data.xAxis[data.xAxis.length - 1]}
-          />
-        </>
-      }, [data, options, originData])}
+      <ReactECharts option={options} />
     </>
   );
 };
 
-export default LineChart;
+export default BarLineChart;

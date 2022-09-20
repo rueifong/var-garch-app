@@ -13,8 +13,14 @@ const BarLineChart = ({
       text: '散佈圖+風險線',
       textStyle: {
         color: '#fff',
+        fontSize: '14px',
       },
-      top: 30,
+      top: 25,
+    },
+    grid: {
+      height: 120,
+      left: '5%',
+      right: '5%',
     },
     dataset: [
       // {
@@ -43,17 +49,17 @@ const BarLineChart = ({
         },
       },
     },
-    grid: {
-      left: "3%",
-      right: "4%",
-      containLabel: true,
-    },
+    // grid: {
+    //   left: "3%",
+    //   right: "4%",
+    //   containLabel: true,
+    // },
     // legend: {
     //   data: ["成交量"],
     // },
     xAxis: [
       {
-        type: "category",
+        type: "time",
         boundaryGap: true,
         data: data.xAxis,
         textStyle: {
@@ -62,11 +68,13 @@ const BarLineChart = ({
         splitLine: {
           show: false
         },
-          // axisLabel: {
-        //   interval: 100,
+        // axisLabel: {
+        //   // interval: 100,
         //   align: 'center',
         //   formatter: (value, index) => {
-        //     return Number(value).toFixed(1);
+        //     return value;
+        //     // return new Date(`${value}`);
+        //     // return Number(value).toFixed(1);
         //   },
         // },
         // axisTick: {
@@ -112,19 +120,21 @@ const BarLineChart = ({
         name: 'daily_ret 2',
         type: 'scatter',
         data: data.blueData,
-        datasetIndex: 0,
+        // datasetIndex: 0,
+        symbolSize: 6,
         emphasis: {
           focus: 'series'
         },
         itemStyle: {
-          color: "skyblue",
+          color: "yellow",
         },
       },
       {
         name: 'daily_ret 1',
         type: 'scatter',
         data: data.greenData,
-        datasetIndex: 0,
+        // datasetIndex: 0,
+        symbolSize: 3,
         emphasis: {
           focus: 'series'
         },
@@ -135,8 +145,9 @@ const BarLineChart = ({
       {
         name: '99% VaR',
         type: 'line',
-        data: data.redData,
-        datasetIndex: 1,
+        data: data.data99,
+        // datasetIndex: 1,
+        symbolSize: 0.1,
         emphasis: {
           focus: 'series'
         },
@@ -149,38 +160,32 @@ const BarLineChart = ({
         // labelLayout: { dx: -20 },
         // encode: { label: 2, tooltip: 1 }
       },
-
-      // {
-      //   name: "成交價",
-      //   type: "line",
-      //   data: data.yAxis,
-      //   endLabel: {
-      //     show: true,
-      //     borderColor: 'red',
-      //     borderWidth: '3px',
-      //     width: '3px',
-      //     height: '3px',
-      //     backgroundColor: 'red',
-      //   },
-      //   markPoint: {
-      //     animation: false,
-      //     symbol: 'circle',
-      //     data: [
-      //       { 
-      //         xAxis: (data.yAxis.length > 0) ? data.yAxis.length-1 : 0,
-      //         yAxis: (data.yAxis.length > 0) ? data.yAxis[data.yAxis.length-1] : 0,
-      //         symbolSize: 6,
-      //         itemStyle: {
-      //           opacity: 1,
-      //           color: '#ff4d4f',
-      //         },
-      //       }
-      //     ]
-      //   },
-      //   // itemStyle: {
-      //   //   color: "black",
-      //   // },
-      // },
+      {
+        name: '95% VaR',
+        type: 'line',
+        data: data.data95,
+        // datasetIndex: 1,
+        symbolSize: 0.1,
+        emphasis: {
+          focus: 'series'
+        },
+        itemStyle: {
+          color: "orange",
+        },
+      },
+      {
+        name: '90% VaR',
+        type: 'line',
+        data: data.data90,
+        // datasetIndex: 1,
+        symbolSize: 0.1,
+        emphasis: {
+          focus: 'series'
+        },
+        itemStyle: {
+          color: "pink",
+        },
+      },
     ],
   };
 

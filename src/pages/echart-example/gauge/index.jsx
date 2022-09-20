@@ -13,7 +13,9 @@ const GaugeChart = ({
       text: data.title,
       textStyle: {
         color: '#fff',
+        fontSize: '14px',
       },
+      top: 60,
     },
     series: [
       {
@@ -25,7 +27,7 @@ const GaugeChart = ({
         splitNumber: 8,
         axisLine: {
           lineStyle: {
-            width: 6,
+            width: 2,
             color: [
               [0.33, '#7CFFB2'],
               [0.66, '#FDDD60'],
@@ -35,9 +37,9 @@ const GaugeChart = ({
         },
         pointer: {
           icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
-          length: '12%',
-          width: 20,
-          offsetCenter: [0, '-50%'],
+          length: '40%',
+          width: 15,
+          offsetCenter: [0, '-30%'],
           itemStyle: {
             color: 'auto'
           }
@@ -46,20 +48,20 @@ const GaugeChart = ({
           length: 1,
           lineStyle: {
             color: 'auto',
-            width: 2
+            width: 1
           }
         },
         splitLine: {
-          length: 10,
+          length: 3,
           lineStyle: {
             color: 'auto',
-            width: 5
+            width: 3
           }
         },
         axisLabel: {
           color: '#fff',
-          fontSize: 20,
-          distance: -60,
+          fontSize: 10,
+          distance: -30,
           formatter: function (value) {
             if (value === 0.75) {
               return '高';
@@ -76,10 +78,11 @@ const GaugeChart = ({
           fontSize: 20
         },
         detail: {
-          fontSize: 35,
+          fontSize: 20,
           offsetCenter: [0, '0%'],
           valueAnimation: true,
           formatter: function (value) {
+            return '';
             return Math.round(value * 100) + '分';
           },
           color: 'auto'
